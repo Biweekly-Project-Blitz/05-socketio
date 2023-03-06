@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Socket.IO Drawing</title>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.3/jquery.min.js"></script>
+    <script src="/socket.io/socket.io.js"></script>
+  </head>
+  <body>
+    <canvas id="canvas" style="position: block;border: 2px solid;" width="500" height="300"></canvas>
+    <p>Socket ID: </p>
+    <p id="socketId"</p>
+  </body>
+  <script>
+    class SignTool {
+          constructor() {
+                this.initVars()
+                this.initEvents()
+              }
+
+          initVars() {
+                this.canvas = $('#canvas')[0]
+                this.ctx = this.canvas.getContext("2d")
+                this.isMouseClicked = false
+                this.isMouseInCanvas = false
+                this.prevX = 0
+                this.currX = 0
+                this.prevY = 0
+                this.currY = 0
+                this.socket = io()
+              }
+
+          initEvents() {
+                $('#canvas').on("mousemove", (e) => this.onMouseMove(e))
+                $('#canvas').on("mousedown", (e) => this.onMouseDown(e))
+                $('#canvas').on("mouseup", () => this.onMouseUp())
+                $('#canvas').on("mouseout", () => this.onMouseOut())
+                $('#canvas').on("mouseenter", (e) => this.onMouseEnter(e))
+              }
+
+          onMouseDown(e) {
+                this.isMouseClicked = true
+                this.updateCurrentPosition(e)
+              }
+
+          onMouseUp() {
+                this.isMouseClicked = false
+              }
+
+          onMouseEnter(e) {
+                this.isMouseInCanvas = true
+                this.updateCurrentPosition(e)
+              }
+
+          onMouseOut() {
+                this.isMouseInCanvas = false
+              }
+
+          onMouseMove(e) {
+                if (this.isMouseClicked && this.isMouseInCanvas) {
+                      this.updateCurrentPosition(e)
+                      this.draw()
+                    }
+              }
+
+          updateCurrentPosition(e) {
+                this.prevX = this.currX
+                this.prevY = this.currY
+                this.currX = e.clientX - this.canvas.offsetLeft
+                this.currY = e.clientY - this.canvas.offsetTop
+              }
+
+          draw() {
+                $("#socketId").text(this.socket.id)
+                this.ctx.beginPath()
+                this.ctx.moveTo(this.prevX, this.prevY)
+                this.ctx.lineTo(this.currX, this.currY)
+                this.ctx.strokeStyle = "black"
+                this.ctx.lineWidth = 2
+                this.ctx.stroke()
+                this.ctx.closePath()
+                this.socket.emit("newLine", {
+                      "prevX":this.prevX,
+                      "prevY":this.prevY,
+                      "currX":this.currX,
+                      "currY":this.currY
+                    })
+              }
+        }
+
+        var canvas = new SignTool()
+  </script>
+</html>
